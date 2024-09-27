@@ -94,7 +94,7 @@ def depthFirstSearch(problem):
         pathCost = problem.getCostOfActions(actions)
 
         if problem.isGoalState(state):
-            print(f"the goal state is: {state}")
+            print(f"optimal path cost is: {pathCost}")
             return actions
 
         explored[state] = pathCost
@@ -124,7 +124,7 @@ def breadthFirstSearch(problem):
         pathCost = problem.getCostOfActions(actions)
 
         if problem.isGoalState(state):
-            print(f"the goal state is: {state}")
+            print(f"optimal path cost is: {pathCost}")
             return actions
 
         explored[state] = pathCost
@@ -152,9 +152,40 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    frontier = util.PriorityQueue()
+    startState = problem.getStartState()
+    startNode = Node(startState, None, [], 0, 0)
+    frontier.push(startNode, euclideanHeuristic(startState, problem))
+    explored = {}
 
+    while not frontier.isEmpty():
+        currentNode = frontier.pop()
+        state = currentNode.getState()
+        actions = currentNode.getActions()
+        pathCost = problem.getCostOfActions(actions)
+
+        if problem.isGoalState(state):
+            print(f"optimal path cost is: {pathCost}")
+            return actions
+
+        explored[state] = pathCost
+        successors = problem.getSuccessors(state)
+
+        for successorState, successorAction, successorCost in successors:
+            if successorState not in explored:
+                successorActions = actions + [successorAction]
+                successorPathCost = problem.getCostOfActions(successorActions)
+                nextNode = Node(successorState, currentNode, successorActions, successorCost, successorPathCost)
+                frontier.push(nextNode, pathCost + euclideanHeuristic(successorState, problem))
+    return []  
+
+
+# moved into search.py to resolve "SearchAgent not specified errors"
+def euclideanHeuristic(position, problem, info={}):
+    "The Euclidean distance heuristic for a PositionSearchProblem"
+    xy1 = position
+    xy2 = problem.goal
+    return ((xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2) ** 0.5
 
 # Abbreviations
 bfs = breadthFirstSearch
