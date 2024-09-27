@@ -17,10 +17,9 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
-from searchAgents import PositionSearchProblem
+# from searchAgents import PositionSearchProblem
 import util
-import pacman
-import game
+from game import Agent
 
 class SearchProblem:
     """
@@ -81,54 +80,67 @@ def depthFirstSearch(problem):
 
     Your search algorithm needs to return a list of actions that reaches the
     goal. Make sure to implement a graph search algorithm.
-
-    To get started, you might want to try some of these simple commands to
-    understand the search problem that is being passed in:
     """
-    print("Start: ", problem.getStartState())
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    print("Start's successors:", problem.getSuccessors(problem.getStartState()))
-
     frontier = util.Stack()
-    # add initial node to frontier
 
-    startNode = Node()
+    startNode = Node(problem.getStartState(), None, [], 0, 0)
     frontier.push(startNode)
-
     explored = {}
 
     while not frontier.isEmpty():
+        currentNode = frontier.pop()
+        state = currentNode.getState()
+        actions = currentNode.getActions()
+        pathCost = problem.getCostOfActions(actions)
 
-        nextNode = frontier.pop()
-        state = nextNode.getState()
-        successors = nextNode.allSuccessors()
+        if problem.isGoalState(state):
+            print(f"the goal state is: {state}")
+            return actions
 
-        if state.isGoalState():
-            actions = []
-            for successor in successors:
-                actions.append(successor.getAction())
-            return actions 
-        
-        explored[state] = nextNode.getPathCost()
+        explored[state] = pathCost
+        successors = problem.getSuccessors(state)
 
-        for successor in successors:
-            if successor.getState() not in explored:
-                frontier.push(successor)
-    
-    return []
+        for successorState, successorAction, successorCost in successors:
+            if successorState not in explored:
+                successorActions = actions + [successorAction]
+                successorPathCost = problem.getCostOfActions(successorActions)
+                nextNode = Node(successorState, currentNode, successorActions, successorCost, successorPathCost)
+                frontier.push(nextNode)
+    return []                    
+
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
+        
     frontier = util.Queue()
+    startNode = Node(problem.getStartState(), None, [], 0, 0)
+    frontier.push(startNode)
+    explored = {}
 
+    while not frontier.isEmpty():
+        currentNode = frontier.pop()
+        state = currentNode.getState()
+        actions = currentNode.getActions()
+        pathCost = problem.getCostOfActions(actions)
 
-    util.raiseNotDefined()
+        if problem.isGoalState(state):
+            print(f"the goal state is: {state}")
+            return actions
+
+        explored[state] = pathCost
+        successors = problem.getSuccessors(state)
+
+        for successorState, successorAction, successorCost in successors:
+            if successorState not in explored:
+                successorActions = actions + [successorAction]
+                successorPathCost = problem.getCostOfActions(successorActions)
+                nextNode = Node(successorState, currentNode, successorActions, successorCost, successorPathCost)
+                frontier.push(nextNode)
+    return []  
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    # TODO
     util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
@@ -141,7 +153,6 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    # TODO    
     util.raiseNotDefined()
 
 
@@ -151,67 +162,52 @@ dfs = depthFirstSearch
 astar = aStarSearch
 ucs = uniformCostSearch
 
-
+#### THE NODE CLASS
 class Node:
     """
     This class outlines the structure of a Node. 
     """
     
-    def __init__(self, state : pacman.GameState, parentNode, actionToState : game.Actions, stepCost : int, pathCost : int): 
+    def __init__(self, state, parentNode, actions, stepCost : int, pathCost : int): 
         
         self.state = state # the current position of an agent in the maze
 
         self.parentNode = parentNode # node preceding the current node
 
-        self.actionToState = actionToState # action leading to the node's current state
+        self.actions = actions # list of actions leading to the node's current state
 
         self.stepCost = stepCost # the cost of the step taken to end at the current state
 
         self.pathCost = pathCost # sum of costs of all steps taken to end at the current state
 
-    def allSuccessors(self):
-        """
-        Gets all successor nodes that follow from node at current point. 
-
-        Returns a list of new Nodes
-        """
-        # (successor, action, stepCost), where 'successor' is a
-        #  successor to the current state, 'action' is the action
-        #  required to get there, and 'stepCost' is the incremental
-        #  cost of expanding to that successor
-        successors = PositionSearchProblem.getSuccessors(self.state)
-        nodes = []
-        parentNode = Node(self.state, self.parentNode, self.actionToState, self.stepCost, self.pathCost)
-        actions = [self.actionToState]
-
-        for successor in successors:
-            prevState = successor[0]
-            action = successor[1]
-            stepCost = successor[2]
-            actions.append(action)
-
-            newNode = Node(prevState, parentNode, action, stepCost, PositionSearchProblem.getCostOfActions(actions))
-
-            nodes.append(newNode)
-
-            parentNode = newNode
-
-        return nodes
-    
     def getState(self):
         """
         Returns the GameState associated with this node. 
         """
         return self.state
     
-    def getAction(self):
+    def getActions(self):
         """
         Returns the action to the current state.
         """
-        return self.actionToState
+        return self.actions
+    
+    def getStepCost(self):
+        """
+        Returns the step cost of the action leading to the current state of the Node.
+        """
+        return self.stepCost
 
     def getPathCost(self):
         """
         Returns the integer representing the cost of the path to the current state of this node.
         """
         return self.pathCost
+    
+    def toString(self):
+        """
+        Formats the field of this Node object such that the fields are readily readable for debugging purposes.
+
+        ex= Node(currentState, parentNode, actions, stepCost, pathCost)
+        """
+        return f"Node: currentState = {self.state}, parentNode = {self.parentNode}, actions = {self.actions}, stepCost = {self.stepCost}, pathCost = {self.pathCost}"
