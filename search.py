@@ -17,9 +17,7 @@ In search.py, you will implement generic search algorithms which are called by
 Pacman agents (in searchAgents.py).
 """
 
-# from searchAgents import PositionSearchProblem
 import util
-from game import Agent
 
 class SearchProblem:
     """
@@ -82,7 +80,7 @@ def depthFirstSearch(problem):
     goal. Make sure to implement a graph search algorithm.
     """
     frontier = util.Stack()
-
+    # add initial node to frontier
     startNode = Node(problem.getStartState(), None, [], 0, 0)
     frontier.push(startNode)
     explored = {}
